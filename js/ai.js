@@ -84,20 +84,23 @@
       signal: controller.signal
     }).then(function (res) {
       clearTimeout(timer);
-      if (!res.ok) {
-        return res.text().then(function (body) {
-          var msg = 'AI 请求失败（HTTP ' + res.status + '）';
-          try {
-            var j = JSON.parse(body);
-            if (j.error && j.error.message) msg += '：' + j.error.message;
-          } catch (e) {
-            if (res.status === 401) msg += '：API Key 无效或未授权';
-            if (res.status === 404) msg += '：接口地址或模型名可能不对';
-          }
-          if (res.status === 429) msg += '：调用频率/额度超限';
-          throw new Error(msg);
-        });
-      }
+    if (!res.ok) {
+      return res.text().then(function (body) {
+        var msg = 'AI 请求失败（HTTP ' + res.status + '）';
+        try {
+          var j = JSON.parse(body);
+          if (j.error && j.error.message) msg += '：' + j.error.message;
+        } catch (e) {
+          if (res.status === 401) msg += '：API Key 无效或未授权';
+          if (res.status === 404) msg += '：接口地址或模型名可能不对';
+        }
+        if (res.status === 429) msg += '：调用频率/额度超限';
+        if (res.status === 401) {
+          msg += ' ｜ 请点右上角 ⚙ 重新复制粘贴完整的 API Key，并确认 Key 与所选服务商匹配';
+        }
+        throw new Error(msg);
+      });
+    }
       return res.json();
     }).then(function (data) {
       var text = data && data.choices && data.choices[0] && data.choices[0].message

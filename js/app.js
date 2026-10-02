@@ -112,7 +112,7 @@
     settings = {
       preset: $('set-preset').value,
       baseUrl: $('set-base').value.trim() || AI.presetById($('set-preset').value).baseUrl,
-      apiKey: $('set-key').value.trim(),
+      apiKey: $('set-key').value.trim().replace(/\s+/g, ''), // Key 不应含任何空白，复制带入的空格/换行自动清除
       model: $('set-model').value.trim() || AI.presetById($('set-preset').value).model,
       voiceName: $('set-voice').value,
       rate: parseFloat($('set-rate').value) || 0.95,
