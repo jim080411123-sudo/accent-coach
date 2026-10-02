@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4f6ef7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AccentCoach">
+  <meta name="description" content="AccentCoach —— 在线口音纠正与英语口语陪练：朗读纠音、AI 对话、重音连读分析">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <title>AccentCoach · 在线口音纠正</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🎯</span>
+      <div>
+        <h1>AccentCoach</h1>
+        <p>在线口音纠正 · 英语口语陪练</p>
+      </div>
+    </div>
+    <button id="btn-settings" class="icon-btn" title="设置">
+      ⚙<span id="settings-badge" class="badge hidden">!</span>
+    </button>
+  </header>
+
+  <nav class="tabs">
+    <button id="tab-practice" class="tab active">📖 朗读纠音</button>
+    <button id="tab-chat" class="tab">💬 AI 对话</button>
+  </nav>
+
+  <div id="install-banner" class="install-banner hidden">
+    <span id="install-text">📱 像 App 一样使用：安装到手机桌面</span>
+    <button id="btn-install" class="primary-btn small">安装</button>
+    <button id="install-dismiss" class="banner-close" title="不再提示">✕</button>
+  </div>
+
+  <main>
+    <!-- ============ 朗读纠音 ============ -->
+    <section id="view-practice" class="view active">
+
+      <div class="source-bar">
+        <select id="passage-select" class="select"></select>
+        <button id="btn-gen" class="ghost-btn small">AI 生成</button>
+        <button id="btn-custom" class="ghost-btn small">自定义</button>
+      </div>
+
+      <div id="gen-form" class="inline-form hidden">
+        <div class="form-row">
+          <input id="gen-topic" placeholder="主题，如：旅行、面试、科技" class="input">
+          <select id="gen-level" class="select narrow">
+            <option>初级</option><option selected>中级</option><option>高级</option>
+          </select>
+        </div>
+        <button id="gen-submit" class="primary-btn small">生成</button>
+      </div>
+
+      <div id="custom-form" class="inline-form hidden">
+        <textarea id="custom-text" rows="3" class="input"
+          placeholder="粘贴或输入你想朗读的英文（10~200 词效果最佳）"></textarea>
+        <button id="custom-submit" class="primary-btn small">使用这段文本</button>
+      </div>
+
+      <div class="card passage-card">
+        <div class="passage-head">
+          <h2 id="passage-title">—</h2>
+          <span id="passage-level" class="chip"></span>
+        </div>
+        <div id="passage-text" class="passage-text"></div>
+        <div class="passage-actions">
+          <button id="btn-demo" class="ghost-btn">🔊 示范朗读</button>
+          <button id="btn-record" class="primary-btn">🎤 开始朗读</button>
+        </div>
+        <div id="listen-bar" class="listen-bar hidden">
+          <span class="mic-dot"></span>
+          <span>正在聆听……<em id="interim"></em></span>
+          <button id="btn-stop" class="danger-btn small">完成</button>
+        </div>
+      </div>
+
+      <div id="result-panel" class="card hidden">
+        <div class="result-head">
+          <div class="score-ring">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="26" class="ring-bg"/>
+              <circle id="score-ring-fg" cx="36" cy="36" r="26" class="ring-fg"/>
+            </svg>
+            <span id="score-num" class="score-num">0</span>
+          </div>
+          <div class="result-meta">
+            <h3>朗读结果</h3>
+            <p id="result-stat"></p>
+            <div class="legend">
+              <span class="lg lg-ok">正确</span>
+              <span class="lg lg-bad">读错</span>
+              <span class="lg lg-miss">漏读</span>
+            </div>
+          </div>
+        </div>
+        <button id="btn-analyze" class="primary-btn wide">🧠 AI 深度分析（重音 / 连读）</button>
+        <div id="analysis" class="analysis"></div>
+      </div>
+
+      <p class="foot-hint">提示：语音识别使用浏览器内置能力（推荐 Chrome / Edge）。读错的词标红、漏读的标灰，AI 会基于对比结果分析重音、连读等问题。</p>
+    </section>
+
+    <!-- ============ AI 对话 ============ -->
+    <section id="view-chat" class="view">
+
+      <div id="chat-setup" class="card setup-card">
+        <h2>开始一场英文对话</h2>
+        <p class="muted">选择场景，AI 教练陪你角色扮演，并在每一轮指出你的问题。</p>
+        <div id="scenario-grid" class="scenario-grid"></div>
+        <div id="custom-scenario-row" class="hidden">
+          <input id="custom-scenario" class="input wide" placeholder="描述你的场景，如：向房东报修热水器">
+        </div>
+        <div class="form-row">
+          <label class="field-label">难度</label>
+          <select id="chat-level" class="select narrow">
+            <option>初级</option><option selected>中级</option><option>高级</option>
+          </select>
+        </div>
+        <button id="btn-start-chat" class="primary-btn wide">开始对话</button>
+      </div>
+
+      <div id="chat-area" class="hidden">
+        <div class="chat-toolbar">
+          <button id="btn-chat-new" class="ghost-btn small">← 换个场景</button>
+        </div>
+        <div id="chat-log" class="chat-log"></div>
+        <div id="chat-loading" class="chat-loading hidden">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <div id="chat-interim" class="chat-interim hidden"></div>
+        <div class="composer">
+          <button id="btn-chat-mic" class="icon-btn mic" title="按住说话（点按开始/结束）">🎤</button>
+          <textarea id="chat-input" rows="1" placeholder="说点什么，或直接打字…"></textarea>
+          <button id="btn-chat-send" class="primary-btn small">发送</button>
+        </div>
+      </div>
+
+      <p class="foot-hint">提示：开口说需要浏览器麦克风权限；AI 每轮回复都会附上中文翻译和纠错卡片。</p>
+    </section>
+  </main>
+
+  <!-- ============ 设置弹窗 ============ -->
+  <div id="modal-mask" class="modal-mask hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>AI 设置</h2>
+        <button id="settings-close" class="icon-btn">✕</button>
+      </div>
+
+      <label class="field-label">AI 服务商（OpenAI 兼容接口）</label>
+      <select id="set-preset" class="select"></select>
+
+      <label class="field-label">接口地址 Base URL</label>
+      <input id="set-base" class="input" placeholder="https://…/v1">
+
+      <label class="field-label">API Key</label>
+      <div class="key-row">
+        <input id="set-key" class="input" type="password" placeholder="sk-…" autocomplete="off">
+        <button id="set-key-eye" class="icon-btn" title="按住显示">👁</button>
+      </div>
+
+      <label class="field-label">模型 <span class="preset-hint" id="model-hint"></span></label>
+      <input id="set-model" class="input" placeholder="模型名称">
+
+      <label class="field-label">发音音色（示范朗读 / AI 回复）</label>
+      <div class="key-row">
+        <select id="set-voice" class="select"></select>
+        <button id="set-voice-test" class="icon-btn" title="试听">🔊</button>
+      </div>
+
+      <label class="field-label">语速 <span id="rate-val" class="preset-hint">0.95x</span></label>
+      <input id="set-rate" class="rate-slider" type="range" min="0.5" max="1.5" step="0.05" value="0.95">
+
+      <button id="set-test" class="ghost-btn">测试连接</button>
+
+      <label class="switch-row">
+        <input id="set-autospeak" type="checkbox" checked> 自动朗读 AI 的英文回复
+      </label>
+
+      <button id="set-save" class="primary-btn wide">保存</button>
+      <p class="hint">API Key 仅保存在你本机浏览器的 localStorage，请求由浏览器直接发往所选服务商，不经过任何第三方服务器。</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/diff.js"></script>
+  <script src="js/passages.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/practice.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
