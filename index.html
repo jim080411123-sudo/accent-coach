@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="glass">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -179,6 +179,17 @@
 
       <label class="field-label">语速 <span id="rate-val" class="preset-hint">0.95x</span></label>
       <input id="set-rate" class="rate-slider" type="range" min="0.5" max="1.5" step="0.05" value="0.95">
+
+      <label class="field-label">外观 · 主题</label>
+      <select id="set-theme" class="select">
+        <option value="auto">跟随系统</option>
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+      </select>
+
+      <label class="switch-row">
+        <input id="set-glass" type="checkbox" checked> 液态玻璃效果（毛玻璃 · 流光 · 动效）
+      </label>
 
       <button id="set-test" class="ghost-btn">测试连接</button>
 

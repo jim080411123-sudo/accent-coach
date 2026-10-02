@@ -89,6 +89,8 @@
     fillVoiceOptions(settings.voiceName);
     $('set-rate').value = settings.rate || 0.95;
     $('rate-val').textContent = (settings.rate || 0.95) + 'x';
+    $('set-theme').value = settings.theme || 'auto';
+    $('set-glass').checked = settings.glass !== false;
     refreshModelHint();
     $('set-autospeak').checked = !!settings.autoSpeak;
     $('modal-mask').classList.remove('hidden');
@@ -114,10 +116,13 @@
       model: $('set-model').value.trim() || AI.presetById($('set-preset').value).model,
       voiceName: $('set-voice').value,
       rate: parseFloat($('set-rate').value) || 0.95,
+      theme: $('set-theme').value,
+      glass: $('set-glass').checked,
       autoSpeak: $('set-autospeak').checked,
       level: settings.level || '中级'
     };
     AI.save(settings);
+    applyAppearance();
     closeSettings();
     toast('设置已保存', 'ok');
   }
@@ -200,6 +205,24 @@
     });
   }
 
+  /* ---------- 外观：主题 + 液态玻璃 ---------- */
+
+  function applyAppearance() {
+    var s = AI.load();
+    var root = document.documentElement;
+    if (s.theme === 'dark') root.setAttribute('data-theme', 'dark');
+    else if (s.theme === 'light') root.setAttribute('data-theme', 'light');
+    else root.removeAttribute('data-theme');
+    root.classList.toggle('glass', s.glass !== false);
+
+    // 手机状态栏颜色跟随主题
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.hasAttribute('data-theme') &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#10131b' : '#f3f5fb');
+  }
+
   /* ---------- 启动 ---------- */
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -237,6 +260,14 @@
     window.Chat.init();
     refreshKeyBadge();
     initInstallBanner();
+    applyAppearance();
+
+    // 系统主题切换时同步状态栏颜色
+    if (window.matchMedia) {
+      try {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyAppearance);
+      } catch (e) { /* 旧浏览器忽略 */ }
+    }
 
     // PWA：注册 Service Worker（需 https 或 localhost/127.0.0.1）
     if ('serviceWorker' in navigator) {

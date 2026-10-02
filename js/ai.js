@@ -22,7 +22,9 @@
     autoSpeak: true,
     level: '中级',
     voiceName: '',
-    rate: 0.95
+    rate: 0.95,
+    theme: 'auto',
+    glass: true
   };
 
   function load() {
