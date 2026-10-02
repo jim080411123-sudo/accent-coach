@@ -12,7 +12,7 @@
 |------|------|
 | 1. 朗读英语时纠正口语（重音、连读等） | 「朗读纠音」标签：浏览器语音识别 → 与原文逐词对比（读错标红/漏读标灰/正确标绿）→ AI 深度分析重音、连读、弱读等问题并给出练习句 |
 | 2. 生成对话文本，与 AI 英文对话，AI 纠错 | 「AI 对话」标签：7 种场景角色扮演，AI 每轮回复附中文翻译 + 纠错卡片（原句 / 改进 / 说明） |
-| 3. 界面简洁 | 单页双标签 + 底部抽屉设置，浅色/深色自适应 |
+| 3. 界面简洁 | 单页双标签 + 底部抽屉设置；可选「液态玻璃」外观（毛玻璃 + 流动光斑 + 动效，可关）；主题三档：跟随系统 / 浅色 / 深色 |
 | 4. AI 可设置 | OpenAI 兼容接口，内置豆包 / 智谱 GLM / DeepSeek / Kimi / 通义千问 / OpenAI / 自定义 7 种预设，API Key 存本机 localStorage |
 | 5. 手机端可用 | 移动优先响应式布局，iOS/安卓浏览器直接访问 |
 
@@ -96,6 +96,10 @@ App 已 PWA 化（manifest + Service Worker + 图标），装到手机主屏幕�
 - 识别文本的对比是「发音问题」的间接信号（识别错的词通常是发音不清的词），AI 分析部分已提示模型据此推断而非下定论。
 - 个别厂商接口不允许浏览器跨域直连，如遇连接失败可换预设或在自定义里填支持 CORS 的地址（实测情况见上文表格）。
 
+## 外观设置
+
+右上角 ⚙ →「外观 · 主题」可选 **跟随系统 / 浅色 / 深色**；「液态玻璃效果」开关控制毛玻璃卡片、流动光斑背景、入场动效（默认开启）。旧设备若感觉卡顿可关闭；不支持 backdrop-filter 的浏览器自动回退为纯色卡片；系统开启"减弱动态效果"时动效自动停用。
+
 ## 后续可扩展
 
 - 接入发音评估 API（如 Azure Speech Pronunciation Assessment）做音素级评分——设置面板已预留「自定义接口」位。
@@ -112,3 +116,4 @@ App 已 PWA 化（manifest + Service Worker + 图标），装到手机主屏幕�
 - [laoba-01/AI-Spoken-English-Practice-Partner](https://github.com/laoba-01/AI-Spoken-English-Practice-Partner) — Go + Vue3 口语陪练平台
 - [Halleck45/OpenPronounce](https://github.com/Halleck45/OpenPronounce) — 音素级发音评估
 - [SSDWGG/svs](https://github.com/SSDWGG/svs) — 音标/连读/弱读/语调训练课程
+- [nikdelvin/liquid-glass](https://github.com/nikdelvin/liquid-glass) — 纯 CSS+SVG 滤镜复刻 iOS 26 液态玻璃（边缘折射增强的借鉴方向）
