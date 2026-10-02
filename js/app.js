@@ -169,18 +169,26 @@
       deferredPrompt = e;
       show('像 App 一样使用：安装到手机桌面');
     });
+    // 兜底：Chrome 的安装事件受参与度启发式影响可能延迟触发，先展示横幅，
+    // 点击时若事件尚未就绪则提示用浏览器菜单安装
+    setTimeout(function () {
+      if (!deferredPrompt && !isStandalone && !isIOS) show('像 App 一样使用：安装到手机桌面');
+    }, 8000);
     if (isIOS) {
       $('btn-install').classList.add('hidden');
       if (!isStandalone) show('iPhone 安装：点浏览器分享 ⬆️ → 「添加到主屏幕」');
     }
 
     $('btn-install').addEventListener('click', function () {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(function () {
-        deferredPrompt = null;
-        banner.classList.add('hidden');
-      });
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function () {
+          deferredPrompt = null;
+          banner.classList.add('hidden');
+        });
+      } else {
+        toast('请用浏览器菜单里的「安装应用 / 添加到主屏幕」，图标就会出现在桌面', 'ok');
+      }
     });
     window.addEventListener('appinstalled', function () {
       banner.classList.add('hidden');
