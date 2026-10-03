@@ -29,6 +29,8 @@
   /* ---------- 设置 ---------- */
 
   var settings;
+  var activeChatPreset = null;
+  var activeAsrPreset = null;
 
   var MODEL_HINTS = {
     doubao: '豆包接口有跨域限制，需先部署项目里的 cloudflare-worker.js（见 README）',
@@ -45,6 +47,18 @@
       sel.appendChild(opt);
     });
     sel.value = selectedId;
+  }
+
+  function fillAsrPresetOptions(selectedId) {
+    var sel = $('set-asr-preset');
+    sel.innerHTML = '';
+    window.ASR.PRESETS.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    sel.value = window.ASR.presetById(selectedId).id;
   }
 
   function fillVoiceOptions(selectedName) {
@@ -80,12 +94,57 @@
     $('model-hint').textContent = currentModelHint();
   }
 
+  function cleanKey(value) {
+    return String(value || '').replace(/\s+/g, '');
+  }
+
+  function captureChatProfile(id) {
+    if (!settings || !id) return;
+    settings.providerProfiles = settings.providerProfiles || {};
+    settings.providerProfiles[id] = {
+      baseUrl: $('set-base').value.trim(),
+      apiKey: cleanKey($('set-key').value),
+      model: $('set-model').value.trim()
+    };
+  }
+
+  function fillChatProfile(id) {
+    var profile = AI.profileFor(settings, id);
+    $('set-base').value = profile.baseUrl;
+    $('set-key').value = profile.apiKey;
+    $('set-model').value = profile.model;
+    activeChatPreset = id;
+    refreshModelHint();
+  }
+
+  function captureAsrProfile(id) {
+    if (!settings || !id) return;
+    settings.asrProfiles = settings.asrProfiles || {};
+    settings.asrProfiles[id] = {
+      baseUrl: $('set-asr-base').value.trim(),
+      apiKey: cleanKey($('set-asr-key').value),
+      model: $('set-asr-model').value.trim()
+    };
+  }
+
+  function fillAsrProfile(id) {
+    var profile = window.ASR.profileFor(settings, id);
+    $('set-asr-base').value = profile.baseUrl;
+    $('set-asr-key').value = profile.apiKey;
+    $('set-asr-model').value = profile.model;
+    activeAsrPreset = id;
+  }
+
+  function refreshAsrFields() {
+    $('asr-ai-fields').classList.toggle('hidden', $('set-asr').value === 'browser');
+  }
+
   function openSettings() {
     settings = AI.load();
     fillPresetOptions(settings.preset);
-    $('set-base').value = settings.baseUrl;
-    $('set-key').value = settings.apiKey;
-    $('set-model').value = settings.model;
+    fillChatProfile(settings.preset);
+    fillAsrPresetOptions(settings.asrPreset || 'siliconflow');
+    fillAsrProfile($('set-asr-preset').value);
     $('set-voice').innerHTML = '';
     fillVoiceOptions(settings.voiceName);
     $('set-rate').value = settings.rate || 0.95;
@@ -93,7 +152,7 @@
     $('set-theme').value = settings.theme || 'auto';
     $('set-glass').checked = settings.glass !== false;
     $('set-asr').value = settings.asrMode || 'auto';
-    refreshModelHint();
+    refreshAsrFields();
     $('set-autospeak').checked = !!settings.autoSpeak;
     $('modal-mask').classList.remove('hidden');
   }
@@ -104,26 +163,31 @@
   }
 
   function onPresetChange() {
-    var p = AI.presetById($('set-preset').value);
-    $('set-base').value = p.baseUrl;
-    $('set-model').value = p.model;
-    refreshModelHint();
+    captureChatProfile(activeChatPreset);
+    fillChatProfile($('set-preset').value);
+  }
+
+  function onAsrPresetChange() {
+    captureAsrProfile(activeAsrPreset);
+    fillAsrProfile($('set-asr-preset').value);
   }
 
   function saveSettings() {
-    settings = {
-      preset: $('set-preset').value,
-      baseUrl: $('set-base').value.trim() || AI.presetById($('set-preset').value).baseUrl,
-      apiKey: $('set-key').value.trim().replace(/\s+/g, ''), // Key 不应含任何空白，复制带入的空格/换行自动清除
-      model: $('set-model').value.trim() || AI.presetById($('set-preset').value).model,
-      voiceName: $('set-voice').value,
-      rate: parseFloat($('set-rate').value) || 0.95,
-      theme: $('set-theme').value,
-      glass: $('set-glass').checked,
-      asrMode: $('set-asr').value,
-      autoSpeak: $('set-autospeak').checked,
-      level: settings.level || '中级'
-    };
+    captureChatProfile(activeChatPreset);
+    captureAsrProfile(activeAsrPreset);
+    var chatProfile = settings.providerProfiles[activeChatPreset];
+    settings.preset = activeChatPreset;
+    settings.baseUrl = chatProfile.baseUrl || AI.presetById(activeChatPreset).baseUrl;
+    settings.apiKey = chatProfile.apiKey;
+    settings.model = chatProfile.model || AI.presetById(activeChatPreset).model;
+    settings.asrMode = $('set-asr').value;
+    settings.asrPreset = activeAsrPreset;
+    settings.voiceName = $('set-voice').value;
+    settings.rate = parseFloat($('set-rate').value) || 0.95;
+    settings.theme = $('set-theme').value;
+    settings.glass = $('set-glass').checked;
+    settings.autoSpeak = $('set-autospeak').checked;
+    settings.level = settings.level || '中级';
     AI.save(settings);
     applyAppearance();
     closeSettings();
@@ -134,9 +198,9 @@
     var btn = $('set-test');
     var temp = {
       preset: $('set-preset').value,
-      baseUrl: $('set-base').value.trim(),
-      apiKey: $('set-key').value.trim(),
-      model: $('set-model').value.trim()
+      baseUrl: $('set-base').value.trim() || AI.presetById($('set-preset').value).baseUrl,
+      apiKey: cleanKey($('set-key').value),
+      model: $('set-model').value.trim() || AI.presetById($('set-preset').value).model
     };
     if (!temp.apiKey) { toast('请先填写 API Key', 'error'); return; }
     btn.disabled = true;
@@ -240,6 +304,8 @@
       if (e.target === $('modal-mask')) closeSettings();
     });
     $('set-preset').addEventListener('change', onPresetChange);
+    $('set-asr-preset').addEventListener('change', onAsrPresetChange);
+    $('set-asr').addEventListener('change', refreshAsrFields);
     $('set-save').addEventListener('click', saveSettings);
     $('set-test').addEventListener('click', testConnection);
     $('set-voice-test').addEventListener('click', function () {
@@ -253,6 +319,9 @@
     $('set-key-eye').addEventListener('mousedown', function () { $('set-key').type = 'text'; });
     $('set-key-eye').addEventListener('mouseup', function () { $('set-key').type = 'password'; });
     $('set-key-eye').addEventListener('mouseout', function () { $('set-key').type = 'password'; });
+    $('set-asr-key-eye').addEventListener('mousedown', function () { $('set-asr-key').type = 'text'; });
+    $('set-asr-key-eye').addEventListener('mouseup', function () { $('set-asr-key').type = 'password'; });
+    $('set-asr-key-eye').addEventListener('mouseout', function () { $('set-asr-key').type = 'password'; });
 
     window.App = {
       toast: toast,

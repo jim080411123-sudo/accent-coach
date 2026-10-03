@@ -26,21 +26,65 @@
     rate: 0.95,
     theme: 'auto',
     glass: true,
-    asrMode: 'auto'
+    asrMode: 'auto',
+    asrPreset: 'siliconflow',
+    providerProfiles: {},
+    asrProfiles: {}
   };
+
+  function cleanProfile(profile, preset) {
+    profile = profile || {};
+    preset = preset || PRESETS[0];
+    return {
+      baseUrl: String(profile.baseUrl || preset.baseUrl || '').trim(),
+      apiKey: String(profile.apiKey || '').replace(/\s+/g, ''),
+      model: String(profile.model || preset.model || '').trim()
+    };
+  }
+
+  function profileFor(settings, id) {
+    settings = settings || {};
+    var preset = presetById(id);
+    var profiles = settings.providerProfiles || {};
+    return cleanProfile(profiles[id], preset);
+  }
+
+  function normalize(raw) {
+    raw = raw || {};
+    var settings = Object.assign({}, DEFAULTS, raw);
+    settings.preset = presetById(settings.preset).id;
+    settings.providerProfiles = Object.assign({}, raw.providerProfiles || {});
+    settings.asrProfiles = Object.assign({}, raw.asrProfiles || {});
+
+    // 旧版本只有一组扁平配置；首次升级时迁移到当时选中的服务商。
+    if (!settings.providerProfiles[settings.preset]) {
+      var legacy = !raw.providerProfiles && raw.preset === settings.preset;
+      settings.providerProfiles[settings.preset] = cleanProfile(legacy ? {
+        baseUrl: raw.baseUrl,
+        apiKey: raw.apiKey,
+        model: raw.model
+      } : null, presetById(settings.preset));
+    }
+
+    // 对外仍暴露当前服务商的扁平字段，兼容现有业务模块。
+    var active = profileFor(settings, settings.preset);
+    settings.baseUrl = active.baseUrl;
+    settings.apiKey = active.apiKey;
+    settings.model = active.model;
+    return settings;
+  }
 
   function load() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return Object.assign({}, DEFAULTS);
-      return Object.assign({}, DEFAULTS, JSON.parse(raw));
+      return normalize(raw ? JSON.parse(raw) : {});
     } catch (e) {
-      return Object.assign({}, DEFAULTS);
+      return normalize({});
     }
   }
 
   function save(settings) {
-    localStorage.setItem(STORE_KEY, JSON.stringify(settings));
+    localStorage.setItem(STORE_KEY, JSON.stringify(normalize(settings)));
   }
 
   function presetById(id) {
@@ -194,6 +238,8 @@
     load: load,
     save: save,
     presetById: presetById,
+    profileFor: profileFor,
+    normalize: normalize,
     chat: chat,
     chatJSON: chatJSON,
     extractJSON: extractJSON,

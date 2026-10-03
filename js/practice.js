@@ -95,8 +95,10 @@
 
   function startRecord() {
     var settings = AI.load();
-    if (!Engine.recognitionSupported && !settings.apiKey) {
-      App.toast('当前浏览器不支持语音识别；若要使用 AI 转写，请先在 ⚙ 设置中配置 API Key', 'error');
+    var needsIndependentAsr = settings.asrMode === 'ai' || !Engine.recognitionSupported;
+    if (needsIndependentAsr && !root.ASR.isConfigured(settings)) {
+      App.toast('当前转写方式需要独立配置。请打开 ⚙ 设置 → 语音转写，或选择免 Key 的浏览器内置转写', 'error');
+      App.openSettings();
       return;
     }
     Engine.TTS.stop();

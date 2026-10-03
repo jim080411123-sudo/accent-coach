@@ -19,16 +19,22 @@
   /* begin({continuous, onUpdate, onStatus, onEnd, onError}) → {stop, abort} */
   function begin(opts) {
     opts = opts || {};
-    var pref = (AI.load().asrMode) || 'auto';
+    var settings = AI.load();
+    var pref = settings.asrMode || 'auto';
+    var aiReady = root.ASR.isConfigured(settings);
     var route = pref === 'browser' ? 'browser'
       : pref === 'ai' ? 'ai'
-        : (remembered() === 'ai' || !Engine.recognitionSupported) ? 'ai' : 'browser';
+        : ((remembered() === 'ai' && aiReady) || !Engine.recognitionSupported) ? 'ai' : 'browser';
 
     if (route === 'ai') return beginAI(opts, false);
     return beginBrowser(opts);
   }
 
   function beginAI(opts, switched) {
+    if (!root.ASR.isConfigured(AI.load())) {
+      if (opts.onError) opts.onError(new Error('独立语音转写尚未配置，请在 ⚙ 设置 → 语音转写 中填写 API Key；也可改用「仅浏览器内置」免 Key 转写'));
+      return { stop: function () { }, abort: function () { } };
+    }
     if (!root.ASR.supported()) {
       if (opts.onError) opts.onError(new Error('此浏览器不支持录音（MediaRecorder），无法使用 AI 转写'));
       return { stop: function () { }, abort: function () { } };
@@ -49,6 +55,10 @@
       onError: function (err) {
         var pref = (AI.load().asrMode) || 'auto';
         if (pref === 'auto' && SWITCHABLE.indexOf(err.code) >= 0) {
+          if (!root.ASR.isConfigured(AI.load())) {
+            if (opts.onError) opts.onError(new Error('浏览器语音识别不可用，且独立转写尚未配置。请在 ⚙ 设置 → 语音转写 中配置，或稍后重试浏览器识别'));
+            return;
+          }
           remember('ai');
           var replacement = beginAI(opts, true);
           if (session) { session.stop = replacement.stop; session.abort = replacement.abort; }
@@ -60,6 +70,10 @@
         if (!text) {
           var pref = (AI.load().asrMode) || 'auto';
           if (pref === 'auto' && remembered() !== 'ai') {
+            if (!root.ASR.isConfigured(AI.load())) {
+              if (opts.onError) opts.onError(new Error('浏览器没有返回识别结果，且独立转写尚未配置。请在 ⚙ 设置 → 语音转写 中配置后重试'));
+              return;
+            }
             remember('ai');
             var replacement = beginAI(opts, true);
             if (session) { session.stop = replacement.stop; session.abort = replacement.abort; }

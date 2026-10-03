@@ -11,6 +11,35 @@
       typeof window.MediaRecorder !== 'undefined';
   };
 
+  var PRESETS = [
+    { id: 'siliconflow', name: '硅基流动 SenseVoice（国内直连）', baseUrl: 'https://api.siliconflow.cn/v1', model: 'FunAudioLLM/SenseVoiceSmall', models: ['FunAudioLLM/SenseVoiceSmall'] },
+    { id: 'zhipu', name: '智谱语音转写', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-asr-2512', models: ['glm-asr-2512', 'glm-4-asr'] },
+    { id: 'openai', name: 'OpenAI Whisper', baseUrl: 'https://api.openai.com/v1', model: 'whisper-1', models: ['whisper-1', 'gpt-4o-mini-transcribe'] },
+    { id: 'custom', name: '自定义（OpenAI 兼容）', baseUrl: '', model: '', models: [] }
+  ];
+
+  function presetById(id) {
+    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];
+    return PRESETS[0];
+  }
+
+  function profileFor(settings, id) {
+    settings = settings || {};
+    var preset = presetById(id);
+    var profile = (settings.asrProfiles || {})[preset.id] || {};
+    return {
+      preset: preset.id,
+      baseUrl: String(profile.baseUrl || preset.baseUrl || '').trim(),
+      apiKey: String(profile.apiKey || '').replace(/\s+/g, ''),
+      model: String(profile.model || preset.model || '').trim()
+    };
+  }
+
+  function isConfigured(settings) {
+    var profile = profileFor(settings, (settings && settings.asrPreset) || 'siliconflow');
+    return !!(profile.apiKey && profile.baseUrl && profile.model);
+  }
+
   // 任意浏览器录音格式 → 16kHz 单声道 16bit WAV（线性重采样）
   function toWav(blob) {
     var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -41,38 +70,34 @@
     });
   }
 
-  // 各服务商的转写模型（OpenAI 兼容 /audio/transcriptions）；空数组 = 该服务商无语音转写接口
-  var ASR_MODELS = {
-    zhipu: ['glm-asr-2512', 'glm-4-asr'],
-    siliconflow: ['FunAudioLLM/SenseVoiceSmall'],
-    openai: ['whisper-1', 'gpt-4o-mini-transcribe'],
-    custom: ['glm-asr-2512', 'FunAudioLLM/SenseVoiceSmall', 'whisper-1']
-    // doubao / deepseek / moonshot / qwen 暂无该兼容接口
-  };
-
   function transcribe(wavBlob, modelIdx) {
     modelIdx = modelIdx || 0;
     var settings = root.AI.load();
-    if (!settings.apiKey) {
-      return Promise.reject(new Error('AI 转写需要先在 ⚙ 设置中配置 API Key'));
+    var profile = profileFor(settings, settings.asrPreset || 'siliconflow');
+    var preset = presetById(profile.preset);
+    if (!profile.apiKey) {
+      return Promise.reject(new Error('语音转写尚未配置。请在 ⚙ 设置 → 语音转写 中填写独立的 API Key'));
     }
-    var models = ASR_MODELS[settings.preset] || [];
+    if (!profile.baseUrl) {
+      return Promise.reject(new Error('请在 ⚙ 设置 → 语音转写 中填写转写接口地址'));
+    }
+    var models = [profile.model].concat(preset.models || []).filter(function (m, i, arr) {
+      return !!m && arr.indexOf(m) === i;
+    });
     if (!models.length) {
-      return Promise.reject(new Error(
-        '当前服务商（' + (root.AI.presetById(settings.preset).name || settings.preset) +
-        '）不提供语音转写接口。AI 转写支持：智谱、硅基流动、OpenAI、自定义接口，请在 ⚙ 设置中更换'));
+      return Promise.reject(new Error('请在 ⚙ 设置 → 语音转写 中填写转写模型名称'));
     }
     var model = models[Math.min(modelIdx, models.length - 1)];
     var fd = new FormData();
     fd.append('file', wavBlob, 'speech.wav');
     fd.append('model', model);
-    var url = settings.baseUrl.replace(/\/+$/, '') + '/audio/transcriptions';
+    var url = profile.baseUrl.replace(/\/+$/, '') + '/audio/transcriptions';
     var controller = new AbortController();
     var timer = setTimeout(function () { controller.abort(); }, 45000);
 
     return fetch(url, {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + settings.apiKey },
+      headers: { 'Authorization': 'Bearer ' + profile.apiKey },
       body: fd,
       signal: controller.signal
     }).then(function (res) {
@@ -181,6 +206,10 @@
   }
 
   root.ASR = {
+    PRESETS: PRESETS,
+    presetById: presetById,
+    profileFor: profileFor,
+    isConfigured: isConfigured,
     supported: supported,
     begin: begin,
     transcribe: transcribe // 调试/测试用

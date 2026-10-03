@@ -152,24 +152,63 @@
   <div id="modal-mask" class="modal-mask hidden">
     <div class="modal">
       <div class="modal-head">
-        <h2>AI 设置</h2>
+        <h2>设置</h2>
         <button id="settings-close" class="icon-btn">✕</button>
       </div>
 
-      <label class="field-label">AI 服务商（OpenAI 兼容接口）</label>
-      <select id="set-preset" class="select"></select>
+      <section class="settings-section">
+        <h3>💬 对话 AI</h3>
+        <p class="section-hint">用于对话陪练、深度分析和生成短文。每个服务商单独保存自己的 Key 与模型。</p>
 
-      <label class="field-label">接口地址 Base URL</label>
-      <input id="set-base" class="input" placeholder="https://…/v1">
+        <label class="field-label">AI 服务商（OpenAI 兼容接口）</label>
+        <select id="set-preset" class="select"></select>
 
-      <label class="field-label">API Key</label>
-      <div class="key-row">
-        <input id="set-key" class="input" type="password" placeholder="sk-…" autocomplete="off">
-        <button id="set-key-eye" class="icon-btn" title="按住显示">👁</button>
-      </div>
+        <label class="field-label">接口地址 Base URL</label>
+        <input id="set-base" class="input" placeholder="https://…/v1">
 
-      <label class="field-label">模型 <span class="preset-hint" id="model-hint"></span></label>
-      <input id="set-model" class="input" placeholder="模型名称">
+        <label class="field-label">API Key</label>
+        <div class="key-row">
+          <input id="set-key" class="input" type="password" placeholder="切换服务商时自动加载对应 Key" autocomplete="off">
+          <button id="set-key-eye" class="icon-btn" title="按住显示">👁</button>
+        </div>
+
+        <label class="field-label">模型 <span class="preset-hint" id="model-hint"></span></label>
+        <input id="set-model" class="input" placeholder="模型名称">
+
+        <button id="set-test" class="ghost-btn">测试对话 AI 连接</button>
+      </section>
+
+      <section class="settings-section">
+        <h3>🎙️ 语音转写</h3>
+        <p class="section-hint">与对话 AI 完全独立。浏览器转写免 Key；国内手机可单独配置硅基流动 SenseVoice。</p>
+
+        <label class="field-label">转写方式</label>
+        <select id="set-asr" class="select">
+          <option value="auto">自动（浏览器优先，失败时用独立转写服务）</option>
+          <option value="browser">仅浏览器内置（无需 API Key）</option>
+          <option value="ai">仅独立转写服务（国内手机推荐）</option>
+        </select>
+
+        <div id="asr-ai-fields">
+          <label class="field-label">转写服务商</label>
+          <select id="set-asr-preset" class="select"></select>
+
+          <label class="field-label">转写接口 Base URL</label>
+          <input id="set-asr-base" class="input" placeholder="https://…/v1">
+
+          <label class="field-label">转写 API Key</label>
+          <div class="key-row">
+            <input id="set-asr-key" class="input" type="password" placeholder="只用于语音转写" autocomplete="off">
+            <button id="set-asr-key-eye" class="icon-btn" title="按住显示">👁</button>
+          </div>
+
+          <label class="field-label">转写模型</label>
+          <input id="set-asr-model" class="input" placeholder="转写模型名称">
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>🔊 朗读与外观</h3>
 
       <label class="field-label">发音音色（示范朗读 / AI 回复）</label>
       <div class="key-row">
@@ -179,13 +218,6 @@
 
       <label class="field-label">语速 <span id="rate-val" class="preset-hint">0.95x</span></label>
       <input id="set-rate" class="rate-slider" type="range" min="0.5" max="1.5" step="0.05" value="0.95">
-
-      <label class="field-label">语音识别方式</label>
-      <select id="set-asr" class="select">
-        <option value="auto">自动（推荐：浏览器优先，失败自动转 AI）</option>
-        <option value="browser">仅浏览器识别</option>
-        <option value="ai">仅 AI 转写（国内手机推荐）</option>
-      </select>
 
       <label class="field-label">外观 · 主题</label>
       <select id="set-theme" class="select">
@@ -198,14 +230,13 @@
         <input id="set-glass" type="checkbox" checked> 液态玻璃效果（毛玻璃 · 流光 · 动效）
       </label>
 
-      <button id="set-test" class="ghost-btn">测试连接</button>
-
       <label class="switch-row">
         <input id="set-autospeak" type="checkbox" checked> 自动朗读 AI 的英文回复
       </label>
+      </section>
 
       <button id="set-save" class="primary-btn wide">保存</button>
-      <p class="hint">API Key 仅保存在你本机浏览器的 localStorage，请求由浏览器直接发往所选服务商，不经过任何第三方服务器。</p>
+      <p class="hint">两套 API Key 均只保存在你本机浏览器的 localStorage；对话和转写请求分别直连你选择的服务商。</p>
     </div>
   </div>
 
