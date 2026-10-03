@@ -95,7 +95,7 @@ App 已 PWA 化（manifest + Service Worker + 图标），装到手机主屏幕�
 
 - **自动（默认）**：先用浏览器内置识别，失败（报错或空结果）时自动切换「AI 转写」并记住；
 - **仅浏览器识别**：Web Speech API，走谷歌/苹果在线服务——**中国大陆安卓手机不可达**（会报 aborted 或无结果），桌面端需可访问谷歌网络；
-- **仅 AI 转写（国内手机推荐）**：页面内录音 → 转码 16kHz WAV → 上传给智谱 `/audio/transcriptions`（模型 glm-asr-2512，见 [智谱文档](https://docs.bigmodel.cn)）转成文字。使用你已配置的 API Key，录音内容会上传至该服务商。
+- **仅 AI 转写（国内手机推荐）**：页面内录音 → 转码 16kHz WAV → 上传给所配服务商的 `/audio/transcriptions` 转成文字。支持：智谱（glm-asr-2512，见 [智谱文档](https://docs.bigmodel.cn)）、硅基流动（SenseVoice，国内直连、注册简单）、OpenAI（whisper-1）、自定义接口；DeepSeek/Kimi/通义/豆包暂无此兼容接口，选择它们时会有明确提示。录音内容会上传至所配服务商。
 
 安卓「添加到主屏幕」的安装版（WebAPK）受系统限制无法调用谷歌语音服务，属于安卓/Chromium 已知行为；安装版里请选「仅 AI 转写」，或在 Chrome 浏览器中打开网址使用。iPhone 建议用 Safari 打开（不要用主屏幕图标），并打开 设置→通用→键盘→启用听写。
 
