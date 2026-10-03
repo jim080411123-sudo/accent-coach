@@ -24,7 +24,8 @@
     voiceName: '',
     rate: 0.95,
     theme: 'auto',
-    glass: true
+    glass: true,
+    asrMode: 'auto'
   };
 
   function load() {

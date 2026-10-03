@@ -94,8 +94,9 @@
   }
 
   function startRecord() {
-    if (!Engine.recognitionSupported) {
-      App.toast('当前浏览器不支持语音识别，请使用 Chrome / Edge（安卓手机可用 Chrome）。', 'error');
+    var settings = AI.load();
+    if (!Engine.recognitionSupported && !settings.apiKey) {
+      App.toast('当前浏览器不支持语音识别；若要使用 AI 转写，请先在 ⚙ 设置中配置 API Key', 'error');
       return;
     }
     Engine.TTS.stop();
@@ -108,12 +109,17 @@
     var bar = $('listen-bar');
     bar.classList.remove('hidden');
     $('btn-record').disabled = true;
+    $('listen-label').innerHTML = '正在聆听……<em id="interim"></em>';
     $('interim').textContent = '';
 
-    state.rec = new Engine.Recognition({
+    state.rec = root.VoiceInput.begin({
       continuous: true,
       onUpdate: function (r) {
         $('interim').textContent = r.interim ? '…' + r.interim : '';
+      },
+      onStatus: function (t) {
+        // AI 转写模式没有实时文本，用状态行代替
+        $('listen-label').textContent = t;
       },
       onError: function (err) {
         App.toast(err.message, 'error');
@@ -127,7 +133,7 @@
         else App.toast('没有识别到内容，请靠近麦克风重试', 'error');
       }
     });
-    state.rec.start();
+    state.rec.start && state.rec.start();
   }
 
   function stopRecord() {

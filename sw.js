@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var CACHE = 'accentcoach-v5';
+  var CACHE = 'accentcoach-v6';
   var ASSETS = [
     './',
     './index.html',
@@ -11,6 +11,8 @@
     './js/diff.js',
     './js/passages.js',
     './js/speech.js',
+    './js/asr.js',
+    './js/voice.js',
     './js/ai.js',
     './js/practice.js',
     './js/chat.js',

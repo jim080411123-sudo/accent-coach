@@ -100,18 +100,29 @@
 
   function micInput() {
     if (state.rec) { stopRec(); return; }
-    if (!Engine.recognitionSupported) {
-      App.toast('当前浏览器不支持语音识别，请使用 Chrome / Edge', 'error');
+    var settings = AI.load();
+    if (!Engine.recognitionSupported && !settings.apiKey) {
+      App.toast('当前浏览器不支持语音识别；若要使用 AI 转写，请先在 ⚙ 设置中配置 API Key', 'error');
       return;
     }
     var btn = $('btn-chat-mic');
     btn.classList.add('recording');
     $('chat-interim').classList.remove('hidden');
     $('chat-interim').textContent = '正在聆听……';
-    state.rec = new Engine.Recognition({
+
+    function cleanup() {
+      state.rec = null;
+      btn.classList.remove('recording');
+      $('chat-interim').classList.add('hidden');
+    }
+
+    state.rec = root.VoiceInput.begin({
       continuous: false,
       onUpdate: function (r) {
         $('chat-interim').textContent = '正在聆听……' + (r.interim || r.final || '');
+      },
+      onStatus: function (t) {
+        $('chat-interim').textContent = t;
       },
       onError: function (err) {
         App.toast(err.message, 'error');
@@ -126,12 +137,6 @@
         }
       }
     });
-    function cleanup() {
-      state.rec = null;
-      btn.classList.remove('recording');
-      $('chat-interim').classList.add('hidden');
-    }
-    state.rec.start();
   }
 
   function stopRec() {

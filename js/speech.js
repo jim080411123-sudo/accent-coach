@@ -6,13 +6,30 @@
 
   var SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+  // iPadOS 13+ 的 navigator.platform 是 MacIntel，用触点数辅助判断
+  var IS_IOS = typeof navigator !== 'undefined' && (
+    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+
+  var IOS_HINT = 'iPhone/iPad 语音识别受限：请用 Safari 打开本页（不要从主屏幕图标进入），允许麦克风权限，并在 设置→通用→键盘 打开「启用听写」。';
+
+  // 安卓"主屏幕安装版"(WebAPK) 无法调用谷歌语音服务，是已知系统限制；浏览器标签页里正常
+  var IS_STANDALONE = typeof window !== 'undefined' && !!(
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    window.navigator.standalone === true
+  );
+
+  var PWA_VOICE_HINT = '主屏幕安装版受安卓限制，无法语音识别：请在 Chrome 浏览器里直接打开本网址使用语音（对话打字、AI、朗读不受影响）。';
+
   var Recognition = function (opts) {
     opts = opts || {};
     if (!SR) throw new Error('当前浏览器不支持语音识别，请使用 Chrome / Edge（手机端推荐安卓 Chrome）。');
 
     var rec = new SR();
     rec.lang = opts.lang || 'en-US';
-    rec.continuous = opts.continuous !== false;
+    // iOS 对连续识别支持差，改为短句模式 + 自动重启拼接
+    rec.continuous = opts.continuous !== false && !IS_IOS;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
@@ -35,14 +52,22 @@
 
     rec.onerror = function (event) {
       var map = {
-        'not-allowed': '麦克风权限被拒绝，请在浏览器地址栏允许麦克风访问后重试。',
-        'service-not-allowed': '语音识别服务不可用，请检查系统麦克风权限或换用 Chrome。',
+        'not-allowed': (!IS_IOS && IS_STANDALONE) ? PWA_VOICE_HINT
+          : '麦克风权限被拒绝，请在浏览器地址栏允许麦克风访问后重试。',
+        'service-not-allowed': (!IS_IOS && IS_STANDALONE) ? PWA_VOICE_HINT
+          : '语音识别服务不可用，请检查系统麦克风权限或换用 Chrome。',
         'no-speech': '没有听到声音，请靠近麦克风再试。',
         'audio-capture': '未检测到麦克风设备。',
+        'aborted': IS_IOS ? IOS_HINT : ((!IS_IOS && IS_STANDALONE) ? PWA_VOICE_HINT : '语音识别被中断，请重试。'),
         'network': '语音识别服务网络异常，请检查网络（该功能依赖系统在线识别）。'
       };
       if (event.error === 'no-speech' && !stopped && restarts < 3) return; // 交给 onend 自动重启
-      if (opts.onError) opts.onError(new Error(map[event.error] || ('识别出错：' + event.error)));
+      if (event.error === 'aborted' && IS_IOS && !stopped && restarts < 3) return; // iOS 首次启动失败，重启一次试试
+      if (opts.onError) {
+        var e = new Error(map[event.error] || ('识别出错：' + event.error));
+        e.code = event.error; // 供上层决定是否切换识别通道
+        opts.onError(e);
+      }
     };
 
     rec.onend = function () {
@@ -50,10 +75,12 @@
         if (opts.onEnd) opts.onEnd(finalText.trim());
         return;
       }
-      // Chrome 常在停顿几秒后自动断开；未主动停止则重启，最长累计 90 秒
+      // Chrome 常在停顿几秒后自动断开；iOS 短句模式也靠重启续听
       restarts++;
       if (restarts <= 30) {
-        try { rec.start(); } catch (e) { /* start() 竞态，忽略 */ }
+        setTimeout(function () {
+          if (!stopped) { try { rec.start(); } catch (e) { /* start() 竞态，忽略 */ } }
+        }, IS_IOS ? 250 : 0);
       } else {
         if (opts.onEnd) opts.onEnd(finalText.trim());
       }
@@ -152,6 +179,8 @@
   root.SpeechEngine = {
     recognitionSupported: !!SR,
     ttsSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+    isIOS: IS_IOS,
+    iosHint: IOS_HINT,
     Recognition: Recognition,
     TTS: TTS
   };

@@ -78,7 +78,7 @@
         </div>
         <div id="listen-bar" class="listen-bar hidden">
           <span class="mic-dot"></span>
-          <span>正在聆听……<em id="interim"></em></span>
+          <span id="listen-label">正在聆听……<em id="interim"></em></span>
           <button id="btn-stop" class="danger-btn small">完成</button>
         </div>
       </div>
@@ -180,6 +180,13 @@
       <label class="field-label">语速 <span id="rate-val" class="preset-hint">0.95x</span></label>
       <input id="set-rate" class="rate-slider" type="range" min="0.5" max="1.5" step="0.05" value="0.95">
 
+      <label class="field-label">语音识别方式</label>
+      <select id="set-asr" class="select">
+        <option value="auto">自动（推荐：浏览器优先，失败自动转 AI）</option>
+        <option value="browser">仅浏览器识别</option>
+        <option value="ai">仅 AI 转写（国内手机推荐）</option>
+      </select>
+
       <label class="field-label">外观 · 主题</label>
       <select id="set-theme" class="select">
         <option value="auto">跟随系统</option>
@@ -207,7 +214,9 @@
   <script src="js/diff.js"></script>
   <script src="js/passages.js"></script>
   <script src="js/speech.js"></script>
+  <script src="js/asr.js"></script>
   <script src="js/ai.js"></script>
+  <script src="js/voice.js"></script>
   <script src="js/practice.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/app.js"></script>

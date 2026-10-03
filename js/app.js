@@ -91,6 +91,7 @@
     $('rate-val').textContent = (settings.rate || 0.95) + 'x';
     $('set-theme').value = settings.theme || 'auto';
     $('set-glass').checked = settings.glass !== false;
+    $('set-asr').value = settings.asrMode || 'auto';
     refreshModelHint();
     $('set-autospeak').checked = !!settings.autoSpeak;
     $('modal-mask').classList.remove('hidden');
@@ -118,6 +119,7 @@
       rate: parseFloat($('set-rate').value) || 0.95,
       theme: $('set-theme').value,
       glass: $('set-glass').checked,
+      asrMode: $('set-asr').value,
       autoSpeak: $('set-autospeak').checked,
       level: settings.level || '中级'
     };
