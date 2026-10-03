@@ -41,8 +41,14 @@
     });
   }
 
-  // 上传转写；模型名按服务商兼容性依次尝试
-  var MODELS = ['glm-asr-2512', 'glm-4-asr'];
+  // 各服务商的转写模型（OpenAI 兼容 /audio/transcriptions）；空数组 = 该服务商无语音转写接口
+  var ASR_MODELS = {
+    zhipu: ['glm-asr-2512', 'glm-4-asr'],
+    siliconflow: ['FunAudioLLM/SenseVoiceSmall'],
+    openai: ['whisper-1', 'gpt-4o-mini-transcribe'],
+    custom: ['glm-asr-2512', 'FunAudioLLM/SenseVoiceSmall', 'whisper-1']
+    // doubao / deepseek / moonshot / qwen 暂无该兼容接口
+  };
 
   function transcribe(wavBlob, modelIdx) {
     modelIdx = modelIdx || 0;
@@ -50,7 +56,13 @@
     if (!settings.apiKey) {
       return Promise.reject(new Error('AI 转写需要先在 ⚙ 设置中配置 API Key'));
     }
-    var model = MODELS[Math.min(modelIdx, MODELS.length - 1)];
+    var models = ASR_MODELS[settings.preset] || [];
+    if (!models.length) {
+      return Promise.reject(new Error(
+        '当前服务商（' + (root.AI.presetById(settings.preset).name || settings.preset) +
+        '）不提供语音转写接口。AI 转写支持：智谱、硅基流动、OpenAI、自定义接口，请在 ⚙ 设置中更换'));
+    }
+    var model = models[Math.min(modelIdx, models.length - 1)];
     var fd = new FormData();
     fd.append('file', wavBlob, 'speech.wav');
     fd.append('model', model);
@@ -73,7 +85,7 @@
             if (j.error && j.error.message) detail = j.error.message;
           } catch (e) { /* keep empty */ }
           // 模型名不被该服务商支持时，换下一个模型名重试
-          if (modelIdx < MODELS.length - 1 && /model|模型|not found|不存在/i.test(detail)) {
+          if (modelIdx < models.length - 1 && /model|模型|not found|不存在/i.test(detail)) {
             return transcribe(wavBlob, modelIdx + 1);
           }
           var err = new Error('AI 转写失败（HTTP ' + res.status + '）' + (detail ? '：' + detail : ''));
@@ -83,6 +95,8 @@
       }
       return res.json();
     }).then(function (data) {
+      // 模型回退时，内层已解析成字符串直接透传
+      if (typeof data === 'string') return data.trim();
       var text = data && (data.text ||
         (data.segments && data.segments.map(function (s) { return s.text || ''; }).join(''))) || '';
       return text.trim();

@@ -5,13 +5,14 @@
   var STORE_KEY = 'accentCoach.settings.v1';
 
   var PRESETS = [
-    { id: 'doubao',   name: '豆包（火山方舟）',         baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',   model: 'doubao-seed-1.6-flash' },
-    { id: 'zhipu',    name: '智谱 GLM（有免费模型）', baseUrl: 'https://open.bigmodel.cn/api/paas/v4',       model: 'glm-4-flash' },
-    { id: 'deepseek', name: 'DeepSeek',               baseUrl: 'https://api.deepseek.com/v1',                model: 'deepseek-chat' },
-    { id: 'moonshot', name: '月之暗面 Kimi',           baseUrl: 'https://api.moonshot.cn/v1',                 model: 'moonshot-v1-8k' },
-    { id: 'qwen',     name: '阿里通义千问',             baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
-    { id: 'openai',   name: 'OpenAI',                 baseUrl: 'https://api.openai.com/v1',                  model: 'gpt-4o-mini' },
-    { id: 'custom',   name: '自定义（OpenAI 兼容）',    baseUrl: '',                                           model: '' }
+    { id: 'zhipu',      name: '智谱 GLM（有免费模型）', baseUrl: 'https://open.bigmodel.cn/api/paas/v4',       model: 'glm-4-flash' },
+    { id: 'siliconflow', name: '硅基流动（国内直连）',  baseUrl: 'https://api.siliconflow.cn/v1',              model: 'deepseek-ai/DeepSeek-V3' },
+    { id: 'doubao',     name: '豆包（火山方舟）',         baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',   model: 'doubao-seed-1.6-flash' },
+    { id: 'deepseek',   name: 'DeepSeek',               baseUrl: 'https://api.deepseek.com/v1',                model: 'deepseek-chat' },
+    { id: 'moonshot',   name: '月之暗面 Kimi',           baseUrl: 'https://api.moonshot.cn/v1',                 model: 'moonshot-v1-8k' },
+    { id: 'qwen',       name: '阿里通义千问',             baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+    { id: 'openai',     name: 'OpenAI',                 baseUrl: 'https://api.openai.com/v1',                  model: 'gpt-4o-mini' },
+    { id: 'custom',     name: '自定义（OpenAI 兼容）',    baseUrl: '',                                           model: '' }
   ];
 
   var DEFAULTS = {

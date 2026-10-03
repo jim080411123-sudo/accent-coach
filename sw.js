@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var CACHE = 'accentcoach-v6';
+  var CACHE = 'accentcoach-v7';
   var ASSETS = [
     './',
     './index.html',

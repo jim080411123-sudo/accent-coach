@@ -31,7 +31,8 @@
   var settings;
 
   var MODEL_HINTS = {
-    doubao: '豆包接口有跨域限制，需先部署项目里的 cloudflare-worker.js（见 README）'
+    doubao: '豆包接口有跨域限制，需先部署项目里的 cloudflare-worker.js（见 README）',
+    siliconflow: '语音转写自动使用 SenseVoice 模型，无需额外配置'
   };
 
   function fillPresetOptions(selectedId) {
